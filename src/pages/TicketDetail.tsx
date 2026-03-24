@@ -13,10 +13,16 @@ import PriorityBadge from '@/features/tickets/components/PriorityBadge';
 import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { ArrowLeft, Loader2, Send, UserCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Send, UserCircle } from 'lucide-react';
 import { formatDate } from '@/lib/formatDate';
 
 const TicketDetailPage: React.FC = () => {
@@ -32,29 +38,28 @@ const TicketDetailPage: React.FC = () => {
   const createComment = useCreateComment(id!);
 
   const [commentText, setCommentText] = React.useState('');
+  const [selectedStatus, setSelectedStatus] = React.useState<string>('');
+  const [selectedAssignedToId, setSelectedAssignedToId] = React.useState<string>('none');
 
-  const handleStatusChange = async (status: string) => {
-    try {
-      await updateStatus.mutateAsync({ status: Number(status) as TicketStatus });
-      toast.success(t('tickets:statusUpdated'));
-    } catch {
-      toast.error(t('common:errorOccurred'));
+  React.useEffect(() => {
+    if (ticket) {
+      setSelectedStatus(String(ticket.status));
+      setSelectedAssignedToId(
+        ticket.assignedToId !== null && ticket.assignedToId !== undefined
+          ? String(ticket.assignedToId)
+          : 'none'
+      );
     }
-  };
-
-  const handleAssign = async (agentId: string) => {
-    try {
-      await assignTicket.mutateAsync({ agentId });
-      toast.success(t('tickets:ticketAssigned'));
-    } catch {
-      toast.error(t('common:errorOccurred'));
-    }
-  };
+  }, [ticket]);
 
   const handleComment = async () => {
     if (!commentText.trim()) return;
+
     try {
-      await createComment.mutateAsync({ content: commentText });
+      await createComment.mutateAsync({
+        body: commentText,
+        isInternal: false,
+      });
       setCommentText('');
     } catch {
       toast.error(t('common:errorOccurred'));
@@ -66,7 +71,7 @@ const TicketDetailPage: React.FC = () => {
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-4">
+          <div className="space-y-4 lg:col-span-2">
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-64 w-full" />
           </div>
@@ -87,6 +92,50 @@ const TicketDetailPage: React.FC = () => {
     );
   }
 
+  const statusChanged =
+    selectedStatus !== '' && selectedStatus !== String(ticket.status);
+
+  const assignedChanged =
+    selectedAssignedToId !==
+    (ticket.assignedToId !== null && ticket.assignedToId !== undefined
+      ? String(ticket.assignedToId)
+      : 'none');
+
+  const hasPendingChanges = statusChanged || assignedChanged;
+  const isSaving = updateStatus.isPending || assignTicket.isPending;
+
+  const handleSaveChanges = async () => {
+    if (!hasPendingChanges) return;
+
+    try {
+      if (statusChanged) {
+        await updateStatus.mutateAsync({
+          status: Number(selectedStatus) as TicketStatus,
+        });
+      }
+
+      if (assignedChanged) {
+        await assignTicket.mutateAsync({
+          assignedToId:
+            selectedAssignedToId === 'none'
+              ? null
+              : Number(selectedAssignedToId),
+        });
+      }
+
+      toast.success(t('tickets:changesSaved', { defaultValue: 'Changes saved' }));
+    } catch {
+      toast.error(t('common:errorOccurred'));
+    }
+  };
+
+  const currentAssignedName =
+    selectedAssignedToId === 'none'
+      ? t('tickets:unassigned')
+      : agents?.find((agent) => String(agent.id) === selectedAssignedToId)?.displayName ||
+        ticket.assignedToName ||
+        t('tickets:unassigned');
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -97,19 +146,16 @@ const TicketDetailPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Description */}
+        <div className="space-y-6 lg:col-span-2">
           <div className="rounded-xl border bg-card p-6 shadow-sm">
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               {t('tickets:description')}
             </h3>
-            <p className="text-foreground leading-relaxed" style={{ overflowWrap: 'break-word' }}>
+            <p className="leading-relaxed text-foreground" style={{ overflowWrap: 'break-word' }}>
               {ticket.description}
             </p>
           </div>
 
-          {/* Comments */}
           <div className="rounded-xl border bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               {t('tickets:comments')} {comments && `(${comments.length})`}
@@ -138,19 +184,18 @@ const TicketDetailPage: React.FC = () => {
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-foreground" style={{ overflowWrap: 'break-word' }}>
-                        {comment.content}
+                        {comment.body}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
+              <p className="py-4 text-center text-sm text-muted-foreground">
                 {t('common:noResults')}
               </p>
             )}
 
-            {/* Add comment */}
             <div className="mt-4 flex gap-2">
               <Textarea
                 value={commentText}
@@ -165,43 +210,47 @@ const TicketDetailPage: React.FC = () => {
                 disabled={createComment.isPending || !commentText.trim()}
                 className="shrink-0 self-end"
               >
-                {createComment.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {createComment.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-4">
-          <div className="rounded-xl border bg-card p-6 shadow-sm space-y-5">
-            {/* Status */}
+          <div className="space-y-5 rounded-xl border bg-card p-6 shadow-sm">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('common:status')}
               </p>
+
               <div className="flex items-center gap-2">
-                <StatusBadge status={ticket.status} />
+                <StatusBadge status={Number(selectedStatus || ticket.status) as TicketStatus} />
               </div>
+
               <Select
-                value={String(ticket.status)}
-                onValueChange={handleStatusChange}
-                disabled={updateStatus.isPending}
+                value={selectedStatus}
+                onValueChange={setSelectedStatus}
+                disabled={isSaving}
               >
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder={t('tickets:changeStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{t('tickets:statusOpen')}</SelectItem>
-                  <SelectItem value="2">{t('tickets:statusInProgress')}</SelectItem>
-                  <SelectItem value="3">{t('tickets:statusResolved')}</SelectItem>
-                  <SelectItem value="4">{t('tickets:statusClosed')}</SelectItem>
-                  <SelectItem value="5">{t('tickets:statusCancelled')}</SelectItem>
-                  <SelectItem value="6">{t('tickets:statusOnHold')}</SelectItem>
+                  <SelectItem value="1">{t('tickets:statusNew')}</SelectItem>
+                  <SelectItem value="2">{t('tickets:statusOpen')}</SelectItem>
+                  <SelectItem value="3">{t('tickets:statusInProgress')}</SelectItem>
+                  <SelectItem value="4">{t('tickets:statusWaitingOnCustomer')}</SelectItem>
+                  <SelectItem value="5">{t('tickets:statusResolved')}</SelectItem>
+                  <SelectItem value="6">{t('tickets:statusClosed')}</SelectItem>
+                  <SelectItem value="7">{t('tickets:statusOnHold')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Priority */}
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('common:priority')}
@@ -209,23 +258,27 @@ const TicketDetailPage: React.FC = () => {
               <PriorityBadge priority={ticket.priority} />
             </div>
 
-            {/* Assigned */}
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('tickets:assignedTo')}
               </p>
-              <p className="text-sm text-foreground mb-2">
-                {ticket.assignedToName || t('tickets:unassigned')}
-              </p>
+
+              <p className="mb-2 text-sm text-foreground">{currentAssignedName}</p>
+
               {agents && (
-                <Select onValueChange={handleAssign} disabled={assignTicket.isPending}>
+                <Select
+                  value={selectedAssignedToId}
+                  onValueChange={setSelectedAssignedToId}
+                  disabled={isSaving}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder={t('tickets:selectAgent')} />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">{t('tickets:unassigned')}</SelectItem>
                     {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
-                        {agent.firstName} {agent.lastName}
+                      <SelectItem key={agent.id} value={String(agent.id)}>
+                        {agent.displayName}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -233,7 +286,19 @@ const TicketDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Created by */}
+            <Button
+              className="w-full"
+              onClick={handleSaveChanges}
+              disabled={!hasPendingChanges || isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {t('common:save', { defaultValue: 'Save' })}
+            </Button>
+
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('tickets:createdBy')}
@@ -241,7 +306,6 @@ const TicketDetailPage: React.FC = () => {
               <p className="text-sm text-foreground">{ticket.createdByName || '—'}</p>
             </div>
 
-            {/* Dates */}
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('common:createdAt')}

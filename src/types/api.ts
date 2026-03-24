@@ -1,12 +1,13 @@
 // ── Enums (match API swagger values) ──────────────────
 
 export enum TicketStatus {
-  Open = 1,
-  InProgress = 2,
-  Resolved = 3,
-  Closed = 4,
-  Cancelled = 5,
-  OnHold = 6,
+  New = 1,
+  Open = 2,
+  InProgress = 3,
+  WaitingOnCustomer = 4,
+  Resolved = 5,
+  Closed = 6,
+  OnHold = 7,
 }
 
 export enum TicketPriority {
@@ -16,13 +17,19 @@ export enum TicketPriority {
   Critical = 4,
 }
 
+export enum UserRole {
+  Requester = 1,
+  Agent = 2,
+  Admin = 3,
+}
+
 // ── Pagination ────────────────────────────────────────
 
 export interface PaginatedRequest {
   page: number;
   pageSize: number;
-  status?: number;
-  priority?: number;
+  status?: TicketStatus;
+  priority?: TicketPriority;
   assignedToId?: number;
 }
 
@@ -34,42 +41,35 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export enum UserRole {
-  Admin = 0,
-  Agent = 1,
-  Customer = 2,
-}
-
 // ── Models ─────────────────────────────────────────────
 
 export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
+  id: number;
+  displayName: string;
   email: string;
   role: UserRole;
-  createdAt: string;
 }
 
 export interface Ticket {
-  id: string;
+  id: number;
   title: string;
   description: string;
   status: TicketStatus;
   priority: TicketPriority;
-  createdById: string;
+  createdById: number;
   createdByName?: string;
-  assignedToId?: string | null;
+  assignedToId?: number | null;
   assignedToName?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Comment {
-  id: string;
-  content: string;
-  ticketId: string;
-  userId: string;
+  id: number;
+  body: string;
+  isInternal: boolean;
+  ticketId: number;
+  userId: number;
   userName?: string;
   createdAt: string;
 }
@@ -92,6 +92,7 @@ export interface CreateTicketRequest {
   title: string;
   description: string;
   priority: TicketPriority;
+  assignedToId?: number | null;
 }
 
 export interface UpdateTicketStatusRequest {
@@ -99,11 +100,12 @@ export interface UpdateTicketStatusRequest {
 }
 
 export interface AssignTicketRequest {
-  agentId: string;
+  assignedToId?: number | null;
 }
 
 export interface CreateCommentRequest {
-  content: string;
+  body: string;
+  isInternal: boolean;
 }
 
 // ── Response DTOs ──────────────────────────────────────

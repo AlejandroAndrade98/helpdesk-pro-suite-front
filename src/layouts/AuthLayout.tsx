@@ -31,7 +31,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             Manage tickets, track progress, and deliver exceptional customer support — all in one place.
           </p>
         </div>
-        <p className="text-sm text-white/40">© 2026 HelpDesk. All rights reserved.</p>
+        <p className="text-sm text-white/40">© 2026 HelpDesk. Created by Alejandro Andrade</p>
       </div>
 
       {/* Right form panel */}

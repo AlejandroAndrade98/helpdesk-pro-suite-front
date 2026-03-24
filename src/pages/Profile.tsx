@@ -7,13 +7,12 @@ import PageHeader from '@/components/shared/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { UserCircle, Mail, Calendar, Shield } from 'lucide-react';
-import { formatDate } from '@/lib/formatDate';
+import { UserCircle, Mail, Shield } from 'lucide-react';
 
 const roleKeys: Record<UserRole, string> = {
-  [UserRole.Admin]: 'users:roleAdmin',
+  [UserRole.Requester]: 'users:roleRequester',
   [UserRole.Agent]: 'users:roleAgent',
-  [UserRole.Customer]: 'users:roleCustomer',
+  [UserRole.Admin]: 'users:roleAdmin',
 };
 
 const ProfilePage: React.FC = () => {
@@ -45,18 +44,22 @@ const ProfilePage: React.FC = () => {
       <PageHeader title={t('users:profileTitle')} subtitle={t('users:profileSubtitle')} />
 
       <div className="max-w-xl rounded-xl border bg-card p-8 shadow-sm">
-        <div className="flex items-center gap-5 mb-8">
+        <div className="mb-8 flex items-center gap-5">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <UserCircle className="h-10 w-10 text-primary" />
           </div>
+
           <div>
             <h2 className="text-xl font-bold text-foreground">
-              {user.firstName} {user.lastName}
+              {user.displayName || 'Sin nombre'}
             </h2>
-            <span className={cn(
-              'mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
-              userRoleColor[user.role],
-            )}>
+
+            <span
+              className={cn(
+                'mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+                userRoleColor[user.role]
+              )}
+            >
               {t(roleKeys[user.role])}
             </span>
           </div>
@@ -70,20 +73,12 @@ const ProfilePage: React.FC = () => {
               <p className="text-sm font-medium text-foreground">{user.email}</p>
             </div>
           </div>
+
           <div className="flex items-center gap-3">
             <Shield className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">{t('users:role')}</p>
               <p className="text-sm font-medium text-foreground">{t(roleKeys[user.role])}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="text-xs text-muted-foreground">{t('users:joinedAt')}</p>
-              <p className="text-sm font-medium text-foreground">
-                {formatDate(user.createdAt, 'MMMM d, yyyy')}
-              </p>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import ThemeSwitcher from '@/components/layout/ThemeSwitcher';
 
 const routeTitles: Record<string, string> = {
   '/': 'dashboard:title',
@@ -26,7 +27,10 @@ const AppHeader: React.FC = () => {
           <h1 className="text-lg font-semibold text-foreground">{title}</h1>
         )}
       </div>
-      <LanguageSwitcher />
+      <div className="flex items-center gap-1">
+        <LanguageSwitcher />
+        <ThemeSwitcher />
+      </div>
     </div>
   );
 };

@@ -10,23 +10,27 @@ interface StatusBadgeProps {
 }
 
 const statusKeys: Record<TicketStatus, string> = {
-  [TicketStatus.Open]: 'tickets:statusOpen',
-  [TicketStatus.InProgress]: 'tickets:statusInProgress',
-  [TicketStatus.Resolved]: 'tickets:statusResolved',
-  [TicketStatus.Closed]: 'tickets:statusClosed',
-  [TicketStatus.Cancelled]: 'tickets:statusCancelled',
-  [TicketStatus.OnHold]: 'tickets:statusOnHold',
+  [TicketStatus.New]: 'statusNew',
+  [TicketStatus.Open]: 'statusOpen',
+  [TicketStatus.InProgress]: 'statusInProgress',
+  [TicketStatus.WaitingOnCustomer]: 'statusWaitingOnCustomer',
+  [TicketStatus.Resolved]: 'statusResolved',
+  [TicketStatus.Closed]: 'statusClosed',
+  [TicketStatus.OnHold]: 'statusOnHold',
 };
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
   const { t } = useTranslation('tickets');
+
   return (
-    <span className={cn(
-      'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
-      ticketStatusColor[status],
-      className,
-    )}>
-      {t(statusKeys[status].split(':')[1])}
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+        ticketStatusColor[status],
+        className,
+      )}
+    >
+      {t(statusKeys[status])}
     </span>
   );
 };

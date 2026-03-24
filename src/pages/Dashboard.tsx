@@ -46,7 +46,6 @@ const Dashboard: React.FC = () => {
     <div className="space-y-8">
       <PageHeader title={t('dashboard:title')} subtitle={t('dashboard:subtitle')} />
 
-      {/* Stats */}
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -60,7 +59,6 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Recent Tickets */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">{t('dashboard:recentTickets')}</h2>
@@ -79,11 +77,13 @@ const Dashboard: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('tickets:ticketTitle')}</TableHead>
+                  <TableHead>{t('tickets:caller', { defaultValue: 'Caller' })}</TableHead>
                   <TableHead>{t('common:status')}</TableHead>
                   <TableHead>{t('common:priority')}</TableHead>
                   <TableHead className="hidden sm:table-cell">{t('common:createdAt')}</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {recentTickets.map((ticket) => (
                   <TableRow
@@ -92,8 +92,15 @@ const Dashboard: React.FC = () => {
                     onClick={() => navigate(ROUTES.ticketDetail(ticket.id))}
                   >
                     <TableCell className="font-medium">{ticket.title}</TableCell>
-                    <TableCell><StatusBadge status={ticket.status} /></TableCell>
-                    <TableCell><PriorityBadge priority={ticket.priority} /></TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {ticket.createdByName || 'Sin nombre'}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={ticket.status} />
+                    </TableCell>
+                    <TableCell>
+                      <PriorityBadge priority={ticket.priority} />
+                    </TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">
                       {formatDate(ticket.createdAt)}
                     </TableCell>
