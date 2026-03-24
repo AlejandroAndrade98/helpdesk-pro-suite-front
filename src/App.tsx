@@ -8,12 +8,17 @@ import AppLayout from "@/layouts/AppLayout";
 
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import IndexPage from "@/pages/Index";
 import Dashboard from "@/pages/Dashboard";
+import RequesterHome from "@/pages/RequesterHome";
 import Tickets from "@/pages/Tickets";
 import TicketDetail from "@/pages/TicketDetail";
 import UsersPage from "@/pages/Users";
 import ProfilePage from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
+
+import { ROUTES } from "@/constants/routes";
+import { UserRole } from "@/types/api";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,15 +37,87 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Public */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path={ROUTES.login} element={<Login />} />
+            <Route path={ROUTES.register} element={<Register />} />
 
-            {/* Protected */}
-            <Route path="/" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
-            <Route path="/tickets" element={<ProtectedRoute><AppLayout><Tickets /></AppLayout></ProtectedRoute>} />
-            <Route path="/tickets/:id" element={<ProtectedRoute><AppLayout><TicketDetail /></AppLayout></ProtectedRoute>} />
-            <Route path="/users" element={<ProtectedRoute><AppLayout><UsersPage /></AppLayout></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
+            {/* Root redirect by role */}
+            <Route
+              path={ROUTES.home}
+              element={
+                <ProtectedRoute>
+                  <IndexPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin + Agent */}
+            <Route
+              path={ROUTES.dashboard}
+              element={
+                <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Agent]}>
+                  <AppLayout>
+                    <Dashboard />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path={ROUTES.tickets}
+              element={
+                <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Agent]}>
+                  <AppLayout>
+                    <Tickets />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Requester */}
+            <Route
+              path={ROUTES.requesterHome}
+              element={
+                <ProtectedRoute allowedRoles={[UserRole.Requester]}>
+                  <AppLayout>
+                    <RequesterHome />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Shared */}
+            <Route
+              path="/tickets/:id"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <TicketDetail />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path={ROUTES.users}
+              element={
+                <ProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <AppLayout>
+                    <UsersPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path={ROUTES.profile}
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ProfilePage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

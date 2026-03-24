@@ -38,5 +38,13 @@
   "priorityLow": "Low",
   "priorityMedium": "Medium",
   "priorityHigh": "High",
-  "priorityCritical": "Critical"
+  "priorityCritical": "Critical",
+  "myTickets": "My Tickets",
+  "myTicketsSubtitle": "Track your active and past support requests",
+  "activeTickets": "Active tickets",
+  "pastTickets": "Past tickets",
+  "noActiveTickets": "You have no active tickets",
+  "noActiveTicketsDescription": "Active tickets will appear here once they exist.",
+  "noPastTickets": "You have no closed tickets",
+  "noPastTicketsDescription": "Resolved or closed tickets will appear here."
 }

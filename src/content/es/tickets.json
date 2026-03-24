@@ -38,5 +38,14 @@
   "priorityLow": "Baja",
   "priorityMedium": "Media",
   "priorityHigh": "Alta",
-  "priorityCritical": "Crítica"
+  "priorityCritical": "Crítica",
+  
+  "myTickets": "Mis tickets",
+  "myTicketsSubtitle": "Haz seguimiento a tus solicitudes activas y pasadas",
+  "activeTickets": "Tickets activos",
+  "pastTickets": "Tickets pasados",
+  "noActiveTickets": "No tienes tickets activos",
+  "noActiveTicketsDescription": "Cuando crees o te respondan tickets activos, aparecerán aquí.",
+  "noPastTickets": "No tienes tickets cerrados",
+  "noPastTicketsDescription": "Los tickets resueltos o cerrados aparecerán aquí."
 }

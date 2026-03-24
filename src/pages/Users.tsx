@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Search } from 'lucide-react';
 import { useUsers } from '@/features/users/hooks/useUsers';
 import { useCurrentUser } from '@/features/users/hooks/useCurrentUser';
 import { useUpdateUserRole } from '@/features/users/hooks/useUpdateUserRole';
@@ -9,6 +10,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import { SkeletonTable } from '@/components/shared/SkeletonCard';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableHeader,
@@ -40,8 +42,19 @@ const UsersPage: React.FC = () => {
   const updateRole = useUpdateUserRole();
 
   const [pendingRoles, setPendingRoles] = React.useState<Record<number, string>>({});
+  const [search, setSearch] = React.useState('');
 
   const isAdmin = currentUser?.role === UserRole.Admin;
+  const normalizedSearch = search.trim().toLowerCase();
+
+  const filteredUsers = (users ?? []).filter((user) => {
+    if (!normalizedSearch) return true;
+
+    return (
+      user.displayName.toLowerCase().includes(normalizedSearch) ||
+      user.email.toLowerCase().includes(normalizedSearch)
+    );
+  });
 
   const handleSaveRole = async (userId: number) => {
     const selectedRole = pendingRoles[userId];
@@ -80,6 +93,17 @@ const UsersPage: React.FC = () => {
     <div className="space-y-6">
       <PageHeader title={t('users:title')} subtitle={t('users:subtitle')} />
 
+      <div className="flex max-w-sm items-center gap-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('users:searchPlaceholder', {
+            defaultValue: 'Search by name or email',
+          })}
+        />
+      </div>
+
       {isLoading ? (
         <SkeletonTable rows={6} />
       ) : !users || users.length === 0 ? (
@@ -92,82 +116,99 @@ const UsersPage: React.FC = () => {
                 <TableHead>{t('users:name')}</TableHead>
                 <TableHead>{t('users:email')}</TableHead>
                 <TableHead>{t('users:role')}</TableHead>
-                {isAdmin && <TableHead>{t('common:actions', { defaultValue: 'Actions' })}</TableHead>}
+                {isAdmin && (
+                  <TableHead>{t('common:actions', { defaultValue: 'Actions' })}</TableHead>
+                )}
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {users.map((user) => {
-                const selectedRole = pendingRoles[user.id] ?? String(user.role);
-                const roleChanged = selectedRole !== String(user.role);
+              {filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={isAdmin ? 4 : 3}
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    {t('users:noSearchResults', {
+                      defaultValue: 'No users match your search',
+                    })}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((user) => {
+                  const selectedRole = pendingRoles[user.id] ?? String(user.role);
+                  const roleChanged = selectedRole !== String(user.role);
 
-                return (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.displayName}</TableCell>
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.displayName}</TableCell>
 
-                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
 
-                    <TableCell>
-                      {isAdmin ? (
-                        <div className="flex items-center gap-2">
-                          <Select
-                            value={selectedRole}
-                            onValueChange={(value) =>
-                              setPendingRoles((prev) => ({ ...prev, [user.id]: value }))
-                            }
-                            disabled={currentUser?.id === user.id && user.role === UserRole.Admin}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={String(UserRole.Requester)}>
-                                {t('users:roleRequester')}
-                              </SelectItem>
-                              <SelectItem value={String(UserRole.Agent)}>
-                                {t('users:roleAgent')}
-                              </SelectItem>
-                              <SelectItem value={String(UserRole.Admin)}>
-                                {t('users:roleAdmin')}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                      <TableCell>
+                        {isAdmin ? (
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={selectedRole}
+                              onValueChange={(value) =>
+                                setPendingRoles((prev) => ({ ...prev, [user.id]: value }))
+                              }
+                              disabled={
+                                currentUser?.id === user.id && user.role === UserRole.Admin
+                              }
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value={String(UserRole.Requester)}>
+                                  {t('users:roleRequester')}
+                                </SelectItem>
+                                <SelectItem value={String(UserRole.Agent)}>
+                                  {t('users:roleAgent')}
+                                </SelectItem>
+                                <SelectItem value={String(UserRole.Admin)}>
+                                  {t('users:roleAdmin')}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
 
+                            <span
+                              className={cn(
+                                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+                                userRoleColor[Number(selectedRole) as UserRole],
+                              )}
+                            >
+                              {t(roleKeys[Number(selectedRole) as UserRole])}
+                            </span>
+                          </div>
+                        ) : (
                           <span
                             className={cn(
                               'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
-                              userRoleColor[Number(selectedRole) as UserRole],
+                              userRoleColor[user.role],
                             )}
                           >
-                            {t(roleKeys[Number(selectedRole) as UserRole])}
+                            {t(roleKeys[user.role])}
                           </span>
-                        </div>
-                      ) : (
-                        <span
-                          className={cn(
-                            'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
-                            userRoleColor[user.role],
-                          )}
-                        >
-                          {t(roleKeys[user.role])}
-                        </span>
-                      )}
-                    </TableCell>
-
-                    {isAdmin && (
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => handleSaveRole(user.id)}
-                          disabled={!roleChanged || updateRole.isPending}
-                        >
-                          {t('common:save', { defaultValue: 'Save' })}
-                        </Button>
+                        )}
                       </TableCell>
-                    )}
-                  </TableRow>
-                );
-              })}
+
+                      {isAdmin && (
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={() => handleSaveRole(user.id)}
+                            disabled={!roleChanged || updateRole.isPending}
+                          >
+                            {t('common:save', { defaultValue: 'Save' })}
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>

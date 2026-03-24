@@ -1,7 +1,9 @@
 export const ROUTES = {
   login: '/login',
   register: '/register',
-  dashboard: '/',
+  home: '/',
+  dashboard: '/dashboard',
+  requesterHome: '/my-tickets',
   tickets: '/tickets',
   ticketDetail: (id: string) => `/tickets/${id}`,
   users: '/users',

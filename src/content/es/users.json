@@ -11,5 +11,7 @@
   "profileSubtitle": "Información de tu cuenta",
   "roleRequester": "Solicitante",
   "roleAgent": "Agente",
-  "roleAdmin": "Administrador"
+  "roleAdmin": "Administrador",
+  "searchPlaceholder": "Buscar por nombre o correo",
+  "noSearchResults": "No hay usuarios que coincidan con la búsqueda"
 }
