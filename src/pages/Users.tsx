@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUsers } from '@/features/users/hooks/useUsers';
+import { useCurrentUser } from '@/features/users/hooks/useCurrentUser';
+import { useUpdateUserRole } from '@/features/users/hooks/useUpdateUserRole';
 import { UserRole } from '@/types/api';
 import { userRoleColor } from '@/mappers/user';
 import PageHeader from '@/components/shared/PageHeader';
@@ -15,7 +17,15 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const roleKeys: Record<UserRole, string> = {
   [UserRole.Requester]: 'users:roleRequester',
@@ -26,6 +36,34 @@ const roleKeys: Record<UserRole, string> = {
 const UsersPage: React.FC = () => {
   const { t } = useTranslation(['users', 'common']);
   const { data: users, isLoading, isError } = useUsers();
+  const { data: currentUser } = useCurrentUser();
+  const updateRole = useUpdateUserRole();
+
+  const [pendingRoles, setPendingRoles] = React.useState<Record<number, string>>({});
+
+  const isAdmin = currentUser?.role === UserRole.Admin;
+
+  const handleSaveRole = async (userId: number) => {
+    const selectedRole = pendingRoles[userId];
+    if (!selectedRole) return;
+
+    try {
+      await updateRole.mutateAsync({
+        id: userId,
+        role: Number(selectedRole) as UserRole,
+      });
+
+      toast.success(t('users:roleUpdated', { defaultValue: 'Role updated' }));
+
+      setPendingRoles((prev) => {
+        const copy = { ...prev };
+        delete copy[userId];
+        return copy;
+      });
+    } catch {
+      toast.error(t('common:errorOccurred'));
+    }
+  };
 
   if (isError) {
     return (
@@ -54,32 +92,82 @@ const UsersPage: React.FC = () => {
                 <TableHead>{t('users:name')}</TableHead>
                 <TableHead>{t('users:email')}</TableHead>
                 <TableHead>{t('users:role')}</TableHead>
+                {isAdmin && <TableHead>{t('common:actions', { defaultValue: 'Actions' })}</TableHead>}
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    {user.displayName || 'Sin nombre'}
-                  </TableCell>
+              {users.map((user) => {
+                const selectedRole = pendingRoles[user.id] ?? String(user.role);
+                const roleChanged = selectedRole !== String(user.role);
 
-                  <TableCell className="text-muted-foreground">
-                    {user.email}
-                  </TableCell>
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.displayName}</TableCell>
 
-                  <TableCell>
-                    <span
-                      className={cn(
-                        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
-                        userRoleColor[user.role]
+                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+
+                    <TableCell>
+                      {isAdmin ? (
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={selectedRole}
+                            onValueChange={(value) =>
+                              setPendingRoles((prev) => ({ ...prev, [user.id]: value }))
+                            }
+                            disabled={currentUser?.id === user.id && user.role === UserRole.Admin}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={String(UserRole.Requester)}>
+                                {t('users:roleRequester')}
+                              </SelectItem>
+                              <SelectItem value={String(UserRole.Agent)}>
+                                {t('users:roleAgent')}
+                              </SelectItem>
+                              <SelectItem value={String(UserRole.Admin)}>
+                                {t('users:roleAdmin')}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <span
+                            className={cn(
+                              'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+                              userRoleColor[Number(selectedRole) as UserRole],
+                            )}
+                          >
+                            {t(roleKeys[Number(selectedRole) as UserRole])}
+                          </span>
+                        </div>
+                      ) : (
+                        <span
+                          className={cn(
+                            'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+                            userRoleColor[user.role],
+                          )}
+                        >
+                          {t(roleKeys[user.role])}
+                        </span>
                       )}
-                    >
-                      {t(roleKeys[user.role])}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+
+                    {isAdmin && (
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          onClick={() => handleSaveRole(user.id)}
+                          disabled={!roleChanged || updateRole.isPending}
+                        >
+                          {t('common:save', { defaultValue: 'Save' })}
+                        </Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

@@ -6,9 +6,10 @@ export const API_ENDPOINTS = {
     register: '/auth/register',
   },
   users: {
+    list: '/users',
     me: '/users/me',
     agents: '/users/agents',
-    list: '/users',
+    updateRole: (id: number) => `/users/${id}/role`,
   },
   tickets: {
     list: '/tickets',

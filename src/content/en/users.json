@@ -9,7 +9,7 @@
   "noUsersDescription": "Users will appear here once they register.",
   "profileTitle": "My Profile",
   "profileSubtitle": "Your account information",
-  "roleAdmin": "Admin",
+  "roleRequester": "Requester",
   "roleAgent": "Agent",
-  "roleCustomer": "Customer"
+  "roleAdmin": "Admin"
 }
