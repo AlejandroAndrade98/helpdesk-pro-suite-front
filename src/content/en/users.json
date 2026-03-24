@@ -1,0 +1,15 @@
+{
+  "title": "Users",
+  "subtitle": "Manage team members and agents",
+  "name": "Name",
+  "email": "Email",
+  "role": "Role",
+  "joinedAt": "Joined",
+  "noUsers": "No users found",
+  "noUsersDescription": "Users will appear here once they register.",
+  "profileTitle": "My Profile",
+  "profileSubtitle": "Your account information",
+  "roleAdmin": "Admin",
+  "roleAgent": "Agent",
+  "roleCustomer": "Customer"
+}

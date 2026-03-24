@@ -1,0 +1,12 @@
+{
+  "title": "Panel",
+  "subtitle": "Resumen de tus operaciones de soporte",
+  "totalTickets": "Total de Tickets",
+  "openTickets": "Abiertos",
+  "inProgressTickets": "En Progreso",
+  "resolvedTickets": "Resueltos",
+  "recentTickets": "Tickets Recientes",
+  "noTicketsYet": "Aún no hay tickets",
+  "noTicketsDescription": "Los tickets aparecerán aquí una vez que se creen.",
+  "viewAll": "Ver todos"
+}

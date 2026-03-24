@@ -1,0 +1,12 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Overview of your support operations",
+  "totalTickets": "Total Tickets",
+  "openTickets": "Open",
+  "inProgressTickets": "In Progress",
+  "resolvedTickets": "Resolved",
+  "recentTickets": "Recent Tickets",
+  "noTicketsYet": "No tickets yet",
+  "noTicketsDescription": "Tickets will appear here once they are created.",
+  "viewAll": "View all"
+}
