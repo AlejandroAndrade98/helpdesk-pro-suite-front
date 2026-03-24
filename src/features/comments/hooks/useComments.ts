@@ -1,13 +1,22 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { commentService } from '@/features/comments/services/commentService';
-import type { CreateCommentRequest } from '@/types/api';
+import { useCurrentUser } from '@/features/users/hooks/useCurrentUser';
+import { TOKEN_KEY } from '@/constants/api';
+import type { Comment } from '@/types/api';
 
-export function useCreateComment(ticketId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateCommentRequest) => commentService.create(ticketId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', ticketId] });
-    },
+function getAccessToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function useComments(ticketId: string) {
+  const { data: currentUser } = useCurrentUser();
+  const token = getAccessToken();
+
+  return useQuery<Comment[]>({
+    queryKey: ['comments', ticketId, currentUser?.id, token],
+    queryFn: () => commentService.getByTicket(ticketId),
+    enabled: !!ticketId && !!token && !!currentUser,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
