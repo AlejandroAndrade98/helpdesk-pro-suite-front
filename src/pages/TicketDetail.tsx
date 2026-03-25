@@ -7,7 +7,7 @@ import { useAssignTicket } from '@/features/tickets/hooks/useAssignTicket';
 import { useAgents } from '@/features/users/hooks/useUsers';
 import { useComments } from '@/features/comments/hooks/useComments';
 import { useCreateComment } from '@/features/comments/hooks/useCreateComment';
-import { TicketStatus } from '@/types/api';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import StatusBadge from '@/features/tickets/components/StatusBadge';
 import PriorityBadge from '@/features/tickets/components/PriorityBadge';
 import PageHeader from '@/components/shared/PageHeader';
@@ -24,11 +24,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { ArrowLeft, Loader2, Save, Send, UserCircle } from 'lucide-react';
 import { formatDate } from '@/lib/formatDate';
+import { TicketStatus, UserRole } from '@/types/api';
 
 const TicketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation(['tickets', 'common']);
+  const { user } = useAuth();
 
   const { data: ticket, isLoading, isError } = useTicket(id!);
   const { data: agents } = useAgents();
@@ -37,7 +39,13 @@ const TicketDetailPage: React.FC = () => {
   const assignTicket = useAssignTicket(id!);
   const createComment = useCreateComment(id!);
 
+  const canManageTicket =
+    user?.role === UserRole.Agent || user?.role === UserRole.Admin;
+
+  const canUseInternalComments = canManageTicket;
+
   const [commentText, setCommentText] = React.useState('');
+  const [isInternalComment, setIsInternalComment] = React.useState(false);
   const [selectedStatus, setSelectedStatus] = React.useState<string>('');
   const [selectedAssignedToId, setSelectedAssignedToId] = React.useState<string>('none');
 
@@ -57,10 +65,12 @@ const TicketDetailPage: React.FC = () => {
 
     try {
       await createComment.mutateAsync({
-        body: commentText,
-        isInternal: false,
+        body: commentText.trim(),
+        isInternal: canUseInternalComments ? isInternalComment : false,
       });
+
       setCommentText('');
+      setIsInternalComment(false);
     } catch {
       toast.error(t('common:errorOccurred'));
     }
@@ -105,7 +115,7 @@ const TicketDetailPage: React.FC = () => {
   const isSaving = updateStatus.isPending || assignTicket.isPending;
 
   const handleSaveChanges = async () => {
-    if (!hasPendingChanges) return;
+    if (!hasPendingChanges || !canManageTicket) return;
 
     try {
       if (statusChanged) {
@@ -123,7 +133,7 @@ const TicketDetailPage: React.FC = () => {
         });
       }
 
-      toast.success(t('tickets:changesSaved', { defaultValue: 'Changes saved' }));
+      toast.success(t('tickets:changesSaved'));
     } catch {
       toast.error(t('common:errorOccurred'));
     }
@@ -169,26 +179,59 @@ const TicketDetailPage: React.FC = () => {
               </div>
             ) : comments && comments.length > 0 ? (
               <div className="space-y-4">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3 rounded-lg bg-muted/50 p-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <UserCircle className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">
-                          {comment.userName || 'User'}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(comment.createdAt, 'MMM d, yyyy HH:mm')}
-                        </span>
+                {comments.map((comment) => {
+                  const internal = comment.isInternal;
+
+                  return (
+                    <div
+                      key={comment.id}
+                      className={`flex gap-3 rounded-lg border-l-4 p-4 ${
+                        internal
+                          ? 'border-l-yellow-400 bg-yellow-50/60 dark:bg-yellow-950/10'
+                          : 'border-l-blue-400 bg-blue-50/60 dark:bg-blue-950/10'
+                      }`}
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <UserCircle className="h-5 w-5 text-primary" />
                       </div>
-                      <p className="mt-1 text-sm text-foreground" style={{ overflowWrap: 'break-word' }}>
-                        {comment.body}
-                      </p>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">
+                            {comment.author?.displayName || t('common:user')}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                              internal
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                            }`}
+                          >
+                            {internal ? t('tickets:commentInternal') : t('tickets:commentPublic')}
+                          </span>
+
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(comment.createdAtUtc, 'MMM d, yyyy HH:mm')}
+                          </span>
+                        </div>
+
+                        {comment.author?.email && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {comment.author.email}
+                          </p>
+                        )}
+
+                        <p
+                          className="mt-2 text-sm text-foreground"
+                          style={{ overflowWrap: 'break-word' }}
+                        >
+                          {comment.body}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
@@ -196,26 +239,73 @@ const TicketDetailPage: React.FC = () => {
               </p>
             )}
 
-            <div className="mt-4 flex gap-2">
-              <Textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder={t('tickets:descriptionPlaceholder')}
-                rows={2}
-                className="flex-1"
-              />
+            <div className="mt-4 space-y-3">
+              {canUseInternalComments && (
+                <div className="flex flex-wrap gap-2">
               <Button
-                size="icon"
-                onClick={handleComment}
-                disabled={createComment.isPending || !commentText.trim()}
-                className="shrink-0 self-end"
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setIsInternalComment(false)}
+                className={
+                  !isInternalComment
+                    ? 'border-blue-400 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/20 dark:text-blue-300'
+                    : ''
+                }
               >
-                {createComment.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                {t('tickets:commentPublic')}
               </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setIsInternalComment(true)}
+                className={
+                  isInternalComment
+                    ? 'border-yellow-400 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:text-yellow-300 hover:text-yellow-900'
+                    : ''
+                }
+              >
+                {t('tickets:commentInternal')}
+              </Button>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={
+                    canUseInternalComments
+                      ? isInternalComment
+                        ? t('tickets:commentPlaceholderInternal')
+                        : t('tickets:commentPlaceholderPublic')
+                      : t('tickets:commentPlaceholderDefault')
+                  }
+                  rows={3}
+                  className={`flex-1 ${
+                    canUseInternalComments
+                      ? isInternalComment
+                        ? 'border-yellow-300 focus-visible:ring-yellow-400'
+                        : 'border-blue-300 focus-visible:ring-blue-400'
+                      : ''
+                  }`}
+                />
+
+                <Button
+                  size="icon"
+                  onClick={handleComment}
+                  disabled={createComment.isPending || !commentText.trim()}
+                  className="shrink-0 self-end"
+                >
+                  {createComment.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -231,24 +321,26 @@ const TicketDetailPage: React.FC = () => {
                 <StatusBadge status={Number(selectedStatus || ticket.status) as TicketStatus} />
               </div>
 
-              <Select
-                value={selectedStatus}
-                onValueChange={setSelectedStatus}
-                disabled={isSaving}
-              >
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder={t('tickets:changeStatus')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">{t('tickets:statusNew')}</SelectItem>
-                  <SelectItem value="2">{t('tickets:statusOpen')}</SelectItem>
-                  <SelectItem value="3">{t('tickets:statusInProgress')}</SelectItem>
-                  <SelectItem value="4">{t('tickets:statusWaitingOnCustomer')}</SelectItem>
-                  <SelectItem value="5">{t('tickets:statusResolved')}</SelectItem>
-                  <SelectItem value="6">{t('tickets:statusClosed')}</SelectItem>
-                  <SelectItem value="7">{t('tickets:statusOnHold')}</SelectItem>
-                </SelectContent>
-              </Select>
+              {canManageTicket && (
+                <Select
+                  value={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                  disabled={isSaving}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder={t('tickets:changeStatus')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">{t('tickets:statusNew')}</SelectItem>
+                    <SelectItem value="2">{t('tickets:statusOpen')}</SelectItem>
+                    <SelectItem value="3">{t('tickets:statusInProgress')}</SelectItem>
+                    <SelectItem value="4">{t('tickets:statusWaitingOnCustomer')}</SelectItem>
+                    <SelectItem value="5">{t('tickets:statusResolved')}</SelectItem>
+                    <SelectItem value="6">{t('tickets:statusClosed')}</SelectItem>
+                    <SelectItem value="7">{t('tickets:statusOnHold')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div>
@@ -265,7 +357,7 @@ const TicketDetailPage: React.FC = () => {
 
               <p className="mb-2 text-sm text-foreground">{currentAssignedName}</p>
 
-              {agents && (
+              {canManageTicket && agents && (
                 <Select
                   value={selectedAssignedToId}
                   onValueChange={setSelectedAssignedToId}
@@ -286,18 +378,20 @@ const TicketDetailPage: React.FC = () => {
               )}
             </div>
 
-            <Button
-              className="w-full"
-              onClick={handleSaveChanges}
-              disabled={!hasPendingChanges || isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              {t('common:save', { defaultValue: 'Save' })}
-            </Button>
+            {canManageTicket && (
+              <Button
+                className="w-full"
+                onClick={handleSaveChanges}
+                disabled={!hasPendingChanges || isSaving}
+              >
+                {isSaving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                {t('common:save', { defaultValue: 'Save' })}
+              </Button>
+            )}
 
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

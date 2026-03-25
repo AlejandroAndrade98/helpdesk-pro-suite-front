@@ -64,14 +64,18 @@ export interface Ticket {
   updatedAt: string;
 }
 
+export interface CommentAuthor {
+  id: number;
+  displayName: string;
+  email: string | null;
+}
+
 export interface Comment {
   id: number;
   body: string;
   isInternal: boolean;
-  ticketId: number;
-  userId: number;
-  userName?: string;
-  createdAt: string;
+  author: CommentAuthor;
+  createdAtUtc: string;
 }
 
 // ── Request DTOs ───────────────────────────────────────

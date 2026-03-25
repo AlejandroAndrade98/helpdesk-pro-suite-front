@@ -47,5 +47,13 @@
   "noActiveTickets": "No tienes tickets activos",
   "noActiveTicketsDescription": "Cuando crees o te respondan tickets activos, aparecerán aquí.",
   "noPastTickets": "No tienes tickets cerrados",
-  "noPastTicketsDescription": "Los tickets resueltos o cerrados aparecerán aquí."
+  "noPastTicketsDescription": "Los tickets resueltos o cerrados aparecerán aquí.",
+
+  "changesSaved": "Cambios guardados",
+  "commentPublic": "Público",
+  "commentInternal": "Interno",
+  "commentPlaceholderPublic": "Escribe un comentario visible para todos...",
+  "commentPlaceholderInternal": "Escribe una nota interna...",
+  "commentPlaceholderDefault": "Escribe un comentario...",
+  "user": "Usuario"
 }

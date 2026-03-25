@@ -46,5 +46,12 @@
   "noActiveTickets": "You have no active tickets",
   "noActiveTicketsDescription": "Active tickets will appear here once they exist.",
   "noPastTickets": "You have no closed tickets",
-  "noPastTicketsDescription": "Resolved or closed tickets will appear here."
+  "noPastTicketsDescription": "Resolved or closed tickets will appear here.",
+  "changesSaved": "Changes saved",
+  "commentPublic": "Public",
+  "commentInternal": "Internal",
+  "commentPlaceholderPublic": "Write a comment visible to everyone...",
+  "commentPlaceholderInternal": "Write an internal note...",
+  "commentPlaceholderDefault": "Write a comment...",
+  "user": "User"
 }
