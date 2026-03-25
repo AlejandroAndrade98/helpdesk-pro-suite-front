@@ -20,7 +20,7 @@ export const ticketPriorityLabels: Record<TicketPriority, { en: string; es: stri
 export const ticketStatusColor: Record<TicketStatus, string> = {
   [TicketStatus.New]: 'bg-slate-100 text-slate-700 border-slate-200',
   [TicketStatus.Open]: 'bg-sky-100 text-sky-700 border-sky-200',
-  [TicketStatus.InProgress]: 'bg-amber-100 text-amber-700 border-amber-200',
+  [TicketStatus.InProgress]: 'bg-green-100 text-green-700 border-green-200',
   [TicketStatus.WaitingOnCustomer]: 'bg-violet-100 text-violet-700 border-violet-200',
   [TicketStatus.Resolved]: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   [TicketStatus.Closed]: 'bg-zinc-200 text-zinc-700 border-zinc-300',
