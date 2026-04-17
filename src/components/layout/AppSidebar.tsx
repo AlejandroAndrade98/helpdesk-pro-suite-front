@@ -20,6 +20,7 @@ import {
   UserCircle,
   LogOut,
   Headset,
+  BarChart3,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCurrentUser } from '@/features/users/hooks/useCurrentUser';
@@ -55,6 +56,13 @@ const navItems: NavItem[] = [
     url: ROUTES.tickets,
     icon: Ticket,
     roles: [UserRole.Admin, UserRole.Agent],
+  },
+  {
+    titleKey: 'dashboard:reports',
+    defaultLabel: 'Reports',
+    url: ROUTES.reports,
+    icon: BarChart3,
+    roles: [UserRole.Admin],
   },
   {
     titleKey: 'users:title',

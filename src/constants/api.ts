@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://helpdesk-api-7fu9.onrender.com';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 export const API_ENDPOINTS = {
   auth: {
@@ -21,6 +21,14 @@ export const API_ENDPOINTS = {
   comments: {
     list: (ticketId: string) => `/tickets/${ticketId}/comments`,
     create: (ticketId: string) => `/tickets/${ticketId}/comments`,
+  },
+  reports: {
+    overview: '/reports/overview',
+    ticketsByStatus: '/reports/tickets-by-status',
+    ticketsByPriority: '/reports/tickets-by-priority',
+    ticketsTrend: '/reports/tickets-trend',
+    agentWorkload: '/reports/agent-workload',
+    exportTickets: '/reports/export/tickets',
   },
 } as const;
 

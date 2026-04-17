@@ -15,6 +15,7 @@ import Tickets from "@/pages/Tickets";
 import TicketDetail from "@/pages/TicketDetail";
 import UsersPage from "@/pages/Users";
 import ProfilePage from "@/pages/Profile";
+import Reports from "@/pages/Reports";
 import NotFound from "@/pages/NotFound";
 
 import { ROUTES } from "@/constants/routes";
@@ -36,11 +37,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public */}
             <Route path={ROUTES.login} element={<Login />} />
             <Route path={ROUTES.register} element={<Register />} />
 
-            {/* Root redirect by role */}
             <Route
               path={ROUTES.home}
               element={
@@ -50,7 +49,6 @@ const App = () => (
               }
             />
 
-            {/* Admin + Agent */}
             <Route
               path={ROUTES.dashboard}
               element={
@@ -73,7 +71,6 @@ const App = () => (
               }
             />
 
-            {/* Requester */}
             <Route
               path={ROUTES.requesterHome}
               element={
@@ -85,7 +82,6 @@ const App = () => (
               }
             />
 
-            {/* Shared */}
             <Route
               path="/tickets/:id"
               element={
@@ -103,6 +99,17 @@ const App = () => (
                 <ProtectedRoute allowedRoles={[UserRole.Admin]}>
                   <AppLayout>
                     <UsersPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path={ROUTES.reports}
+              element={
+                <ProtectedRoute allowedRoles={[UserRole.Admin]}>
+                  <AppLayout>
+                    <Reports />
                   </AppLayout>
                 </ProtectedRoute>
               }

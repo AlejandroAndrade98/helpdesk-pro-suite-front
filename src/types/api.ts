@@ -112,6 +112,58 @@ export interface CreateCommentRequest {
   isInternal: boolean;
 }
 
+// ── Reports ────────────────────────────────────────────
+
+export interface ReportFilters {
+  fromUtc?: string;
+  toUtc?: string;
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  assignedToId?: number;
+}
+
+export interface ReportsOverview {
+  totalTickets: number;
+  newTickets: number;
+  openTickets: number;
+  inProgressTickets: number;
+  waitingOnCustomerTickets: number;
+  resolvedTickets: number;
+  closedTickets: number;
+  onHoldTickets: number;
+  assignedTickets: number;
+  unassignedTickets: number;
+  criticalTickets: number;
+  highPriorityTickets: number;
+}
+
+export interface TicketsByStatus {
+  status: TicketStatus;
+  count: number;
+}
+
+export interface TicketsByPriority {
+  priority: TicketPriority;
+  count: number;
+}
+
+export interface TicketsTrendPoint {
+  date: string;
+  count: number;
+}
+
+export interface AgentWorkloadItem {
+  userId: number;
+  displayName: string;
+  role: UserRole;
+  assignedTickets: number;
+  activeTickets: number;
+  resolvedTickets: number;
+  closedTickets: number;
+}
+
+export type ReportsExportParams = ReportFilters;
+
 // ── Response DTOs ──────────────────────────────────────
 
 export interface AuthResponse {

@@ -7,5 +7,6 @@ export const ROUTES = {
   tickets: '/tickets',
   ticketDetail: (id: string) => `/tickets/${id}`,
   users: '/users',
+  reports: '/reports',
   profile: '/profile',
 } as const;
